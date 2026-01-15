@@ -1,6 +1,6 @@
 'use client';
 
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -8,8 +8,9 @@ import Image from 'next/image';
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [activeSection, setActiveSection] = useState('home');
+  const [menuOpen, setMenuOpen] = useState(false); // <-- NEW
 
-  const navItems = useMemo(()=>[
+  const navItems = useMemo(() => [
     { name: 'Home', href: '#home' },
     { name: 'About', href: '#about' },
     { name: 'Skills', href: '#skills' },
@@ -48,6 +49,7 @@ export default function Navbar() {
     if (element) {
       element.scrollIntoView({ behavior: 'smooth' });
     }
+    setMenuOpen(false); // <-- Close menu on link click
   };
 
   return (
@@ -57,7 +59,6 @@ export default function Navbar() {
       transition={{ duration: 0.8, type: "spring" }}
       className="fixed top-0 left-0 right-0 z-50"
     >
-      {/* Navbar container with crazy glass effect */}
       <div className="relative mx-4 mt-4">
         <div
           className={`relative transition-all duration-500 ${
@@ -235,6 +236,7 @@ export default function Navbar() {
                 whileTap={{ scale: 0.9 }}
                 className="md:hidden relative text-white p-2 rounded-lg border border-white/10 bg-white/5 backdrop-blur-sm"
                 aria-label="Toggle menu"
+                onClick={() => setMenuOpen((open) => !open)} // <-- Toggle menu
               >
                 <svg
                   className="w-6 h-6"
@@ -253,6 +255,54 @@ export default function Navbar() {
             </div>
           </div>
         </div>
+        {/* Mobile Menu Overlay */}
+        <AnimatePresence>
+          {menuOpen && (
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.3 }}
+              className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm flex flex-col md:hidden"
+              onClick={() => setMenuOpen(false)}
+            >
+              <motion.div
+                initial={{ x: '-100%' }}
+                animate={{ x: 0 }}
+                exit={{ x: '-100%' }}
+                transition={{ duration: 0.3 }}
+                className="bg-dark-elevated/95 w-4/5 max-w-xs h-full shadow-2xl p-8 flex flex-col gap-6"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="flex items-center gap-2 mb-8">
+                  <Image src="/photo.jpeg" alt="Logo" width={32} height={32} className="rounded-full" />
+                  <span className="text-lg font-bold text-white">Shashwat Shukla</span>
+                </div>
+                {navItems.map((item) => (
+                  <Link
+                    key={item.name}
+                    href={item.href}
+                    onClick={(e) => handleNavClick(e, item.href)}
+                    className={`py-3 px-2 rounded-lg text-base font-medium transition-colors ${
+                      activeSection === item.href.slice(1)
+                        ? 'bg-accent-cyan/20 text-accent-cyan'
+                        : 'text-gray-200 hover:bg-white/10'
+                    }`}
+                  >
+                    {item.name}
+                  </Link>
+                ))}
+                <a
+                  href="#contact"
+                  onClick={(e) => handleNavClick(e, '#contact')}
+                  className="mt-8 py-3 px-2 rounded-lg bg-gradient-to-r from-accent-cyan to-accent-purple text-white font-bold text-center"
+                >
+                  Let&apos;s Talk 🚀
+                </a>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </motion.nav>
   );
